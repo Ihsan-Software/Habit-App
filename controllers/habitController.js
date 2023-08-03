@@ -133,3 +133,51 @@ exports.getActiveHabits = async(req, res) => {
         })
     }
 };
+
+
+exports.check = async(req, res) => {
+    try {
+        const habit = await Habit.find({ name: req.body.name });
+        
+        if (habit.length > 1) {
+            
+            habit.forEach(ele => {
+                if (ele.active) {
+                    ele.counter += 1;
+                    ele.date.push(req.requestTime)
+                    ele.save().catch((err) => {
+                        console.error('Error 🔥: ', err);
+                    });
+                }
+                console.log(ele.counter)
+            });
+            res.status(201).json({
+                status: 'success',
+                requestTime: req.requestTime,
+                results:habit.length,
+                data:{
+                    habit
+                }
+            });
+        }
+        else {
+            const newHabit = await Habit.create(req.body);
+            newHabit.date = newHabit.date.push(req.requestTime)
+            res.status(201).json({
+                status: 'success',
+                message: "add new true habit",
+                createTime:req.requestTime,
+                data:{
+                    newHabit
+                }
+            });
+        }
+
+    }catch(err){
+        res.status(404).json({
+            status: 'fail',
+            failureTime: req.requestTime,
+            message: err.message
+        })
+    }
+};
