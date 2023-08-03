@@ -162,7 +162,10 @@ exports.check = async(req, res) => {
         }
         else {
             const newHabit = await Habit.create(req.body);
-            newHabit.date = newHabit.date.push(req.requestTime)
+            newHabit.date.push(req.requestTime)
+            newHabit.save().catch((err) => {
+                console.error('Error 🔥: ', err);
+            });
             res.status(201).json({
                 status: 'success',
                 message: "add new true habit",
