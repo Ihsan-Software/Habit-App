@@ -149,7 +149,7 @@ exports.check = async(req, res) => {
                         console.error('Error 🔥: ', err);
                     });
                 }
-                console.log(ele.counter)
+
             });
             res.status(201).json({
                 status: 'success',
@@ -161,11 +161,20 @@ exports.check = async(req, res) => {
             });
         }
         else {
-            const newHabit = await Habit.create(req.body);
-            newHabit.date.push(req.requestTime)
-            newHabit.save().catch((err) => {
-                console.error('Error 🔥: ', err);
+
+            const newHabit = await Habit.create({
+                name: habit[0].name,
+                icon: habit[0].icon,
+                color: habit[0].color,
+                counter: 1,
+                active: true,
+                date: req.requestTime
             });
+
+            // newHabit.date.push(req.requestTime)
+            // newHabit.save().catch((err) => {
+            //     console.error('Error 🔥: ', err);
+            // });
             res.status(201).json({
                 status: 'success',
                 message: "add new true habit",
