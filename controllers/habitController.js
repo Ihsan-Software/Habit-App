@@ -193,3 +193,41 @@ exports.check = async(req, res) => {
         })
     }
 };
+
+exports.unCheck = async(req, res) => {
+    try {
+
+        const habit = await Habit.find({ name: req.body.name, active: true });
+        if (habit.length>0) {
+            habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== req.requestTime.split('T')[0])
+
+            habit[0].counter -= 1;
+            
+            habit[0].save().catch((err) => {
+                console.error('Error 🔥: ', err);
+            });
+            res.status(200).json({
+                status: 'success',
+                message: `delete date:[${req.requestTime}] for this habit...`,
+                requestTime:req.requestTime,
+                data:{
+                    habit
+                }
+            });
+        }
+        else {
+            res.status(404).json({
+                status: 'fail',
+                failureTime: req.requestTime,
+                message: 'Not Find This Habit'
+            })
+        }
+        
+    }catch(err){
+        res.status(404).json({
+            status: 'fail',
+            failureTime: req.requestTime,
+            message: err.message
+        })
+    }
+};
