@@ -29,7 +29,7 @@ exports.getHabit = catchAsync(async(req, res, next) => {
 });
 
 exports.createHabit = catchAsync(async(req, res, next) => {
-    const newHabit = await User.create(req.body);
+    const newHabit = await Habit.create(req.body);
         res.status(201).json({
             status: 'success',
             createTime:req.requestTime,
