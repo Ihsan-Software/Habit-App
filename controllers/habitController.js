@@ -51,7 +51,6 @@ exports.updateHabit =catchAsync(async(req, res, next) => {
     res.status(201).json({
         status: 'success',
         requestTime:req.requestTime,
-        results:habits.length,
         data:{
             habit
         }
