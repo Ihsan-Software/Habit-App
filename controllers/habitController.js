@@ -1,31 +1,24 @@
 const Habit = require('../models/habitModel');
+const catchAsync = require('../utils/catchAsync');
 
-exports.getHabits = async(req, res) => {
+exports.getHabits = catchAsync(async(req, res, next) => {
     
-    try {
-        const habits = await Habit.find();
-        console.log(habits.active)
-        console.log(habits.counter)
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            results:habits.length,
-            data:{
-                habits
-            }
-        });
-    } catch (err) {
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        });
-    };
-}
+    const habits = await Habit.find();
+    res.status(200).json({
+        status: 'success',
+        requestTime:req.requestTime,
+        results:habits.length,
+        data:{
+            habits
+        }
+    });
+});
 
-exports.getHabit = async(req, res) => {
-    try {
-        const habit = await Habit.findById(req.params.id);
+exports.getHabit = catchAsync(async(req, res, next) => {
+    const habit = await Habit.findById(req.params.id);
+    if(!habit){
+        return next(new AppError('No habit found with that ID', 404));
+    }
         res.status(200).json({
             status: 'success',
             requestTime:req.requestTime,
@@ -33,61 +26,45 @@ exports.getHabit = async(req, res) => {
                 habit
             }
         });
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+});
 
-exports.createHabit = async(req, res) => {
-    try {
-        const newHabit = await Habit.create(req.body);
+exports.createHabit = catchAsync(async(req, res, next) => {
+    const newHabit = await User.create(req.body);
         res.status(201).json({
             status: 'success',
             createTime:req.requestTime,
             data:{
-                user: newHabit
+                habit: newHabit
             }
         });
+});
 
-    }catch(err){
-        res.status(400).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
-
-exports.updateHabit = async(req, res) => {
-    try {
-        const habit = await Habit.findByIdAndUpdate(req.params.id, req.body,
-            {
-                new: true,
-                runValidators:true
-            });
-        res.status(201).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            data:{
-                habit
-            }
+exports.updateHabit =catchAsync(async(req, res, next) => {
+    const habit = await Habit.findByIdAndUpdate(req.params.id, req.body,
+        {
+            new: true,
+            runValidators:true
         });
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+        if(!habit){
+            return next(new AppError('No habit found with that ID', 404));
+        }
+    res.status(201).json({
+        status: 'success',
+        requestTime:req.requestTime,
+        results:habits.length,
+        data:{
+            habit
+        }
+    });
+});
 
-exports.deleteHabit = async(req, res) => {
-    try {
-        const habit = await Habit.findByIdAndDelete(req.params.id);
+
+exports.deleteHabit = catchAsync(async(req, res, next) => {
+
+    const habit = await Habit.findByIdAndDelete(req.params.id);
+    if(!habit){
+        return next(new AppError('No habit found with that ID', 404));
+    }
         res.status(204).json({
             status: 'success',
             requestTime:req.requestTime,
@@ -95,17 +72,10 @@ exports.deleteHabit = async(req, res) => {
                 habit:null
             }
         });
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+});
 
-exports.getActiveHabits = async(req, res) => {
-    try {
+
+exports.getActiveHabits = catchAsync(async(req, res) => {
         result = []
         const habit = await Habit.find();
         habit.forEach(ele => {
@@ -125,109 +95,86 @@ exports.getActiveHabits = async(req, res) => {
                 result
             }
         });
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+
+});
 
 
-exports.check = async(req, res) => {
-    try {
+exports.check = catchAsync(async(req, res) => {
+
         const habit = await Habit.find({ name: req.body.name });
-        
-        if (habit.length > 1) {
-            
-            habit.forEach(ele => {
-                if (ele.active) {
-                    ele.counter += 1;
-                    ele.date.push(req.requestTime)
-                    ele.save().catch((err) => {
-                        console.error('Error 🔥: ', err);
-                    });
-                }
-
-            });
-            res.status(201).json({
-                status: 'success',
-                requestTime: req.requestTime,
-                results:habit.length,
-                data:{
-                    habit
-                }
-            });
-        }
-        else {
-
-            const newHabit = await Habit.create({
-                name: habit[0].name,
-                icon: habit[0].icon,
-                color: habit[0].color,
-                counter: 1,
-                active: true,
-                date: req.requestTime
-            });
-
-            // newHabit.date.push(req.requestTime)
-            // newHabit.save().catch((err) => {
-            //     console.error('Error 🔥: ', err);
-            // });
-            res.status(201).json({
-                status: 'success',
-                message: "add new true habit",
-                createTime:req.requestTime,
-                data:{
-                    newHabit
-                }
-            });
+        const result = await habit[0].checkProcess(habit)
+        if ( result[0]) {
+                const data = await result[0].getTodayHabitsProcess()
+                
+                res.status(200).json({
+                    status: 'success',
+                    requestTime:req.requestTime,
+                    activeCounter: data[1].length,
+                    notActiveCounter:data[0].length,
+                    data: {
+                        activeHabits: data[1],
+                        notActiveHabits:data[0]
+                        
+                    }
+                });
         }
 
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+});
 
-exports.unCheck = async(req, res) => {
-    try {
+exports.unCheck = catchAsync(async (req, res) => {
 
         const habit = await Habit.find({ name: req.body.name, active: true });
-        if (habit.length>0) {
-            habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== req.requestTime.split('T')[0])
+        const result = await habit[0].unCheckProcess(habit)
 
-            habit[0].counter -= 1;
+        if ( result[0]) {
+            const data = await result[0].getTodayHabitsProcess()
             
-            habit[0].save().catch((err) => {
-                console.error('Error 🔥: ', err);
-            });
             res.status(200).json({
                 status: 'success',
-                message: `delete date:[${req.requestTime}] for this habit...`,
                 requestTime:req.requestTime,
-                data:{
-                    habit
+                activeCounter: data[1].length,
+                notActiveCounter:data[0].length,
+                data: {
+                    activeHabits: data[1],
+                    notActiveHabits:data[0]
+                    
+                }
+            });
+    }
+        
+});
+
+exports.getTodayHabits = catchAsync(async(req, res) => {
+
+
+        var activeHabits = await Habit.find({ active: true });
+        var notActiveHabits = await Habit.find({ active: false });
+        if (activeHabits[0]) {
+            const data = await activeHabits[0].getTodayHabitsProcess()
+            
+            res.status(200).json({
+                status: 'success',
+                requestTime:req.requestTime,
+                activeCounter: data[1].length,
+                notActiveCounter:data[0].length,
+                data: {
+                    activeHabits: data[1],
+                    notActiveHabits:data[0]
+                    
                 }
             });
         }
         else {
-            res.status(404).json({
-                status: 'fail',
-                failureTime: req.requestTime,
-                message: 'Not Find This Habit'
-            })
+            res.status(200).json({
+                status: 'success',
+                requestTime:req.requestTime,
+                activeCounter: activeHabits.length,
+                notActiveCounter:notActiveHabits.length,
+                data: {
+                    notActiveHabits
+                    
+                }
+            });
         }
-        
-    }catch(err){
-        res.status(404).json({
-            status: 'fail',
-            failureTime: req.requestTime,
-            message: err.message
-        })
-    }
-};
+
+})
