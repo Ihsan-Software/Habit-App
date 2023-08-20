@@ -98,13 +98,57 @@ exports.getActiveHabits = catchAsync(async(req, res) => {
 });
 
 
+
+const sendResponse = (req, res, data)=>{
+    if (data[1][0] && data[0][0] ) {
+        return res.status(200).json({
+            status: 'success',
+            requestTime:req.requestTime,
+            activeCounter: data[1].length,
+            notActiveCounter:data[0].length,
+            data: {
+                activeHabits: data[1],
+                notActiveHabits:data[0]
+                
+            }
+        });
+    }
+    else if (data[1].length==0 && data[0][0] ){
+        data[1].push({})
+        console.log(data[1])
+        return res.status(200).json({
+            status: 'success',
+            requestTime:req.requestTime,
+            activeCounter: data[1].length,
+            notActiveCounter:data[0].length,
+            data: {
+                activeHabits: data[1],
+                notActiveHabits:data[0]
+                
+            }
+        });
+    }
+    else if ((!data[0][0]) && data[1][0] ){
+        data[0].push({})
+        return res.status(200).json({
+            status: 'success',
+            requestTime:req.requestTime,
+            activeCounter: data[1].length,
+            notActiveCounter:data[0].length,
+            data: {
+                activeHabits: data[1],
+                notActiveHabits:data[0]
+                
+            }
+        });
+    }
+}
+
 exports.check = catchAsync(async(req, res) => {
 
     const habit = await Habit.find({ name: req.body.name });
-    console.log('start checkProcess')
-    req.requestTime = new Date().toISOString();
-    if (habit.length > 1) {
 
+    if (habit.length > 1) {
         habit.forEach(ele => {
             if (ele.active) {
                 ele.counter += 1;
@@ -132,57 +176,13 @@ exports.check = catchAsync(async(req, res) => {
     var activeHabits = await Habit.find({ active: true });
     var notActiveHabits = await Habit.find({ active: false });
     const data = await activeHabits[0].getTodayHabitsProcess()
-    if (data[1][0] && data[0][0] ) {
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
-    else if (data[1].length==0 && data[0][0] ){
-        console.log('11111111111111')
-        data[1].push('Active Habits Is Empty')
-        console.log(data[1])
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
-    else if ((!data[0][0]) && data[1][0] ){
-        console.log('single habittttttttttt')
-        data[0].push('Not Active Habits Is Empty')
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
+    sendResponse(req, res, data)
 
 });
 
 exports.unCheck = catchAsync(async (req, res) => {
 
     const habit = await Habit.find({ name: req.body.name, active: true });
-    console.log('start unCheckProcess')
     var tempHabit = []
     currentTime = new Date().toISOString();
 
@@ -217,102 +217,15 @@ exports.unCheck = catchAsync(async (req, res) => {
     var activeHabits = await Habit.find({ active: true });
     var notActiveHabits = await Habit.find({ active: false });
     const data = await activeHabits[0].getTodayHabitsProcess()
-    if (data[1][0] && data[0][0] ) {
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
-    else if (data[1].length==0 && data[0][0] ){
-        console.log('11111111111111')
-        data[1].push('Active Habits Is Empty')
-        console.log(data[1])
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
-    else if ((!data[0][0]) && data[1][0] ){
-        console.log('single habittttttttttt')
-        data[0].push('Not Active Habits Is Empty')
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-    }
+    sendResponse(req, res, data)
+
 });
 
 exports.getTodayHabits = catchAsync(async(req, res) => {
 
-
-        var activeHabits = await Habit.find({ active: true });
-        var notActiveHabits = await Habit.find({ active: false });
-        const data = await activeHabits[0].getTodayHabitsProcess()
-        if (data[1][0] && data[0][0] ) {
-            res.status(200).json({
-                status: 'success',
-                requestTime:req.requestTime,
-                activeCounter: data[1].length,
-                notActiveCounter:data[0].length,
-                data: {
-                    activeHabits: data[1],
-                    notActiveHabits:data[0]
-                    
-                }
-            });
-        }
-        
-        else if (data[1].length==0 && data[0][0] ){
-            console.log('11111111111111')
-            data[1].push('Active Habits Is Empty')
-            console.log(data[1])
-            res.status(200).json({
-                status: 'success',
-                requestTime:req.requestTime,
-                activeCounter: data[1].length,
-                notActiveCounter:data[0].length,
-                data: {
-                    activeHabits: data[1],
-                    notActiveHabits:data[0]
-                    
-                }
-            });
-        }
-            
-        else if ((!data[0][0]) && data[1][0] ){
-            console.log('single habittttttttttt')
-            data[0].push('Not Active Habits Is Empty')
-            res.status(200).json({
-                status: 'success',
-                requestTime:req.requestTime,
-                activeCounter: data[1].length,
-                notActiveCounter:data[0].length,
-                data: {
-                    activeHabits: data[1],
-                    notActiveHabits:data[0]
-                    
-                }
-            });
-        }
+    var activeHabits = await Habit.find({ active: true });
+    var notActiveHabits = await Habit.find({ active: false });
+    const data = await activeHabits[0].getTodayHabitsProcess()
+    sendResponse(req, res, data)
 })
+
