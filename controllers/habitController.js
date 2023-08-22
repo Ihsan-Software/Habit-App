@@ -1,6 +1,6 @@
 const Habit = require('../models/habitModel');
 const AppError = require('../utils/appError');
-const catchAsync = require('../utils/CatchAsync');
+const catchAsync = require('../utils/catchAsync');
 
 exports.getHabits = catchAsync(async(req, res, next) => {
     
@@ -129,12 +129,14 @@ exports.check = catchAsync(async(req, res, next) => {
                     ele.save().catch((err) => {
                         console.error('Error 🔥: ', err);
                     });
+                    console.log('update date, counter:\n')
+                    console.log(ele)
                 }
             });
             
         }
         else {
-    
+
             const newHabit = await Habit.create({
                 name: habit[0].name,
                 icon: habit[0].icon,
@@ -143,6 +145,8 @@ exports.check = catchAsync(async(req, res, next) => {
                 active: true,
                 date: req.requestTime
             });
+            console.log('newHabit:\n')
+            console.log(newHabit)
         }
     }
     else {
@@ -161,6 +165,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
     const habit = await Habit.find({ name: req.body.name, active: true });
     if (habit[0]) {
         console.log('start unCheckProcess')
+        console.log(habit)
         var tempHabit = []
         currentTime = new Date().toISOString();
 
@@ -172,8 +177,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
 
         habit[0].date = habit[0].date.filter(item => item.split('T')[0] === currentTime.split('T')[0])
 
-        if (habit[0].date[0] && habit[0].date[0].split('T')[0] === currentTime.split('T')[0]) {
-
+        if (habit[0].date[0]) {
 
             if (habit[0].counter > 1) {
                 habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== currentTime.split('T')[0])
@@ -185,20 +189,28 @@ exports.unCheck = catchAsync(async (req, res, next) => {
                 habit[0].save().catch((err) => {
                     console.error('Error 🔥: ', err);
                 });
-
             }
             else 
                 await Habit.findByIdAndDelete(habit[0]._id);
+        }
+        else {
+            return next(new AppError('You Dont Have This Habit Completed, Please Complete It Then Click On Uncompleteing', 404));
         }
 
 
         var activeHabits = await Habit.find({ active: true });
         var notActiveHabits = await Habit.find({ active: false });
-        const data = await activeHabits[0].getTodayHabitsProcess()
+        var data;
+        if (activeHabits[0]) {
+            data = await activeHabits[0].getTodayHabitsProcess()
+        }
+        else {
+            data = await notActiveHabits[0].getTodayHabitsProcess()
+        }
         sendResponse(req, res, data)
     }
     else {
-        return next(new AppError('You Dont Have This Habit, Please Create It Then Click On Uncompleteing', 404));
+        return next(new AppError('You Dont Have This Habit, Please Create It and Complete It and Then Click On Uncompleteing', 404));
     }
 });
 
@@ -206,7 +218,13 @@ exports.getTodayHabits = catchAsync(async(req, res, next) => {
 
     var activeHabits = await Habit.find({ active: true });
     var notActiveHabits = await Habit.find({ active: false });
-    const data = await activeHabits[0].getTodayHabitsProcess()
+    var data;
+    if (activeHabits[0]) {
+        data = await activeHabits[0].getTodayHabitsProcess()
+    }
+    else {
+        data = await notActiveHabits[0].getTodayHabitsProcess()
+    }
     sendResponse(req, res, data)
 
 
