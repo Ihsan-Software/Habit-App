@@ -1,6 +1,6 @@
 const Habit = require('../models/habitModel');
 const AppError = require('../utils/appError');
-const catchAsync = require('../utils/catchAsync');
+const catchAsync = require('../utils/CatchAsync');
 
 exports.getHabits = catchAsync(async(req, res, next) => {
     
