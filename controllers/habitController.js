@@ -204,8 +204,15 @@ exports.unCheck = catchAsync(async (req, res, next) => {
         if (activeHabits[0]) {
             data = await activeHabits[0].getTodayHabitsProcess()
         }
-        else {
+        else if(notActiveHabits[0]){
             data = await notActiveHabits[0].getTodayHabitsProcess()
+        }
+        else {
+            return res.status(200).json({
+                status: 'success',
+                requestTime:req.requestTime,
+                data:[]
+            });
         }
         sendResponse(req, res, data)
     }
@@ -222,8 +229,15 @@ exports.getTodayHabits = catchAsync(async(req, res, next) => {
     if (activeHabits[0]) {
         data = await activeHabits[0].getTodayHabitsProcess()
     }
-    else {
+    else if(notActiveHabits[0]){
         data = await notActiveHabits[0].getTodayHabitsProcess()
+    }
+    else {
+        return res.status(200).json({
+            status: 'success',
+            requestTime:req.requestTime,
+            data:[]
+        });
     }
     sendResponse(req, res, data)
 
