@@ -179,7 +179,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
 
         if (habit[0].date[0]) {
 
-            if (habit[0].counter > 1) {
+            if (habit[0].counter > 1 && habit[0].date.length==1) {
                 habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== currentTime.split('T')[0])
 
                 habit[0].counter -= 1;
