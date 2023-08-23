@@ -121,16 +121,26 @@ exports.check = catchAsync(async(req, res, next) => {
     console.log('start checkProcess')
     if (habit[0]) {
         if (habit.length > 1) {
-
             habit.forEach(ele => {
                 if (ele.active) {
-                    ele.counter += 1;
-                    ele.date.push(req.requestTime)
-                    ele.save().catch((err) => {
-                        console.error('Error 🔥: ', err);
-                    });
-                    console.log('update date, counter:\n')
-                    console.log(ele)
+                    var findDate = false;
+                    ele.date.forEach(eDate => {
+                        if (eDate.split('T')[0] === req.requestTime.split('T')[0])
+                            findDate = true
+                    })
+                    if (!findDate) {
+                        
+                        ele.counter += 1;
+                        ele.date.push(req.requestTime)
+                        ele.save().catch((err) => {
+                            console.error('Error 🔥: ', err);
+                        });
+                        console.log('update date, counter:\n')
+                        console.log(ele)
+                    }
+                    else {
+                        console.log('good app dear.......')
+                    }
                 }
             });
             
