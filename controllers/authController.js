@@ -5,13 +5,17 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 
-// Crate Token...
 const signToken = id=>{
-    return jwt.sign({id}, process.env.JWT_SECRET,{
-        expiresIn: process.env.JWT_EXPIRES_IN
-    });
+    return jwt.sign({id}, process.env.JWT_SECRET);//,{expiresIn: process.env.JWT_EXPIRES_IN}
 }
 
+const sendToken = (user, statusCode, res) => {
+    const token = signToken(user._id)
+    res.status(statusCode).json({
+        status: 'success',
+        token: `Bearer ${token}`,
+    });
+}
 exports.signup = catchAsync(async(req, res, next)=>{
 
     // Get User Info From Client Side...
@@ -20,22 +24,8 @@ exports.signup = catchAsync(async(req, res, next)=>{
         email: req.body.email,
         password: req.body.password
     });
-
-    // Create Token For The curent User...
-    const token = signToken(newUser._id)
-
-    // Send Response To The Client...
-    res.status(201).json({
-        status: 'success',
-        token: `Bearer ${token}`,
-        user: {
-            _id: newUser._id,
-            name: newUser.name,
-            email: newUser.email,
-            photo: newUser.photo,
-            role: newUser.role
-        }
-    });
+    
+    sendToken(newUser, 201, res)
 });
 
 exports.login = catchAsync(async(req, res, next)=>{
@@ -54,20 +44,7 @@ exports.login = catchAsync(async(req, res, next)=>{
     if(!user || !(await user.correctPassword(password, user.password))){
         return next(new AppError('Incorrect Email or Password', 401));
     }
-    
-    const token = signToken(user._id);
-    // If Everything Is Ok, Send token To Client...
-    res.status(200).json({
-        status: 'success',
-        token: `Bearer ${token}`,
-        user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            photo: user.photo,
-            role: user.role
-        }
-    });
+    sendToken(user, 201, res)
 });
 
 exports.protect_ = catchAsync(async(req, res, next)=>{
@@ -76,7 +53,9 @@ exports.protect_ = catchAsync(async(req, res, next)=>{
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
         token = req.headers.authorization.split(' ')[1];
     }
-
+    else if(req.body.token && req.body.token.startsWith('Bearer')){
+        token = req.body.token.split(' ')[1];
+    }
     if(!token){
         return next(new AppError(' You are not logged in, please log in to get access.', 401));
     }

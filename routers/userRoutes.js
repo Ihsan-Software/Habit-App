@@ -9,10 +9,11 @@ const router = express.Router();
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 
-
+router.use(authController.protect_)
+// router.use(authController.restrictTo('admin'))
 //User Routers RESF
-router.route('/').get(authController.protect_, userController.getUsers).post(authController.protect_, authController.restrictTo('admin'), userController.createUser);
-router.route('/:id').get(authController.protect_, authController.restrictTo('admin'),  userController.getUser).patch(authController.protect_, authController.restrictTo('admin'),  userController.updateUser)
-.delete(authController.protect_, authController.restrictTo('admin'), userController.deleteUser);
+router.route('/').get(userController.getUsers).post(userController.createUser);
+router.route('/:id').get(userController.getUser).patch(userController.updateUser)
+.delete(userController.deleteUser);
 
 module.exports = router;
