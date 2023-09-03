@@ -5,6 +5,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 
+// Crate Token...
 const signToken = id=>{
     return jwt.sign({id}, process.env.JWT_SECRET);//,{expiresIn: process.env.JWT_EXPIRES_IN}
 }
@@ -16,6 +17,7 @@ const sendToken = (user, statusCode, res) => {
         token: `Bearer ${token}`,
     });
 }
+
 exports.signup = catchAsync(async(req, res, next)=>{
 
     // Get User Info From Client Side...
@@ -56,6 +58,7 @@ exports.protect_ = catchAsync(async(req, res, next)=>{
     else if(req.body.token && req.body.token.startsWith('Bearer')){
         token = req.body.token.split(' ')[1];
     }
+    
     if(!token){
         return next(new AppError(' You are not logged in, please log in to get access.', 401));
     }
@@ -86,3 +89,12 @@ exports.restrictTo = (...roles)=>{
         next();
     }
 }
+
+
+exports.logout = catchAsync(async(req,res,next) => {
+    res.cookie('jwt','loggedout', {
+        expires: new Date(Date.now()+10*1000),
+        httpOnly: true
+    });
+    res.redirect('/')
+});

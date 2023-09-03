@@ -1,79 +1,30 @@
 const Habit = require('../models/habitModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('../controllers/handlerController');
 
-exports.getHabits = catchAsync(async(req, res, next) => {
-    
-    const habits = await Habit.find();
-    res.status(200).json({
-        status: 'success',
-        requestTime:req.requestTime,
-        results:habits.length,
-        data:{
-            habits
-        }
-    });
-});
+//CURD FUNCTIONS
+exports.getHabits = factory.getAll(Habit)
 
-exports.getHabit = catchAsync(async(req, res, next) => {
-    const habit = await Habit.findById(req.params.id);
-    if(!habit){
-        return next(new AppError('No habit found with that ID', 404));
+exports.getHabit = factory.getOne(Habit)
+
+exports.createHabit = factory.createOne(Habit)
+
+exports.updateHabit = factory.updateOne(Habit)
+
+exports.deleteHabit = factory.deleteOne(Habit)
+
+
+
+// Other
+
+exports.createMeHabit = (req, res, next) => {
+    if (!req.user) {
+        return next(new AppError('Cant Find UserID...!,maybe you are not pass user  id from token',404));
     }
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            data:{
-                habit
-            }
-        });
-});
-
-exports.createHabit = catchAsync(async(req, res, next) => {
-    const newHabit = await Habit.create(req.body);
-        res.status(201).json({
-            status: 'success',
-            createTime:req.requestTime,
-            data:{
-                habit: newHabit
-            }
-        });
-});
-
-exports.updateHabit =catchAsync(async(req, res, next) => {
-    const habit = await Habit.findByIdAndUpdate(req.params.id, req.body,
-        {
-            new: true,
-            runValidators:true
-        });
-        if(!habit){
-            return next(new AppError('No habit found with that ID', 404));
-        }
-    res.status(201).json({
-        status: 'success',
-        requestTime:req.requestTime,
-        data:{
-            habit
-        }
-    });
-});
-
-
-exports.deleteHabit = catchAsync(async(req, res, next) => {
-
-    const habit = await Habit.findByIdAndDelete(req.params.id);
-    if(!habit){
-        return next(new AppError('No habit found with that ID', 404));
-    }
-        res.status(204).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            data:{
-                habit:null
-            }
-        });
-});
-
+    req.params.id = req.user.id
+    next();
+}
 
 exports.getActiveHabits = catchAsync(async(req, res) => {
         result = []
@@ -99,7 +50,6 @@ exports.getActiveHabits = catchAsync(async(req, res) => {
 });
 
 
-
 const sendResponse = (req, res, data)=>{
 
         return res.status(200).json({
@@ -117,8 +67,9 @@ const sendResponse = (req, res, data)=>{
 
 exports.check = catchAsync(async(req, res, next) => {
 
-    const habit = await Habit.find({ name: req.body.name });
+    const habit = await Habit.find({ name: req.body.name, user:req.user.id});
     console.log('start checkProcess')
+    console.log(habit)
     if (habit[0]) {
         if (habit.length > 1) {
             habit.forEach(ele => {
@@ -153,10 +104,9 @@ exports.check = catchAsync(async(req, res, next) => {
                 color: habit[0].color,
                 counter: 1,
                 active: true,
-                date: req.requestTime
+                date: req.requestTime,
+                user: habit[0].user
             });
-            console.log('newHabit:\n')
-            console.log(newHabit)
         }
     }
     else {
@@ -166,13 +116,13 @@ exports.check = catchAsync(async(req, res, next) => {
 
     var activeHabits = await Habit.find({ active: true });
     var notActiveHabits = await Habit.find({ active: false });
-    const data = await activeHabits[0].getTodayHabitsProcess()
+    const data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
     sendResponse(req, res, data)
 });
 
 exports.unCheck = catchAsync(async (req, res, next) => {
 
-    const habit = await Habit.find({ name: req.body.name, active: true });
+    const habit = await Habit.find({ name: req.body.name, active: true, user:req.user.id});
     if (habit[0]) {
         console.log('start unCheckProcess')
         console.log(habit)
@@ -212,10 +162,10 @@ exports.unCheck = catchAsync(async (req, res, next) => {
         var notActiveHabits = await Habit.find({ active: false });
         var data;
         if (activeHabits[0]) {
-            data = await activeHabits[0].getTodayHabitsProcess()
+            data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
         }
         else if(notActiveHabits[0]){
-            data = await notActiveHabits[0].getTodayHabitsProcess()
+            data = await notActiveHabits[0].getTodayHabitsProcess(req.user.id)
         }
         else {
             return res.status(200).json({
@@ -225,6 +175,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
             });
         }
         sendResponse(req, res, data)
+    
     }
     else {
         return next(new AppError('You Dont Have This Habit, Please Create It and Complete It and Then Click On Uncompleteing', 404));
@@ -237,10 +188,10 @@ exports.getTodayHabits = catchAsync(async(req, res, next) => {
     var notActiveHabits = await Habit.find({ active: false });
     var data;
     if (activeHabits[0]) {
-        data = await activeHabits[0].getTodayHabitsProcess()
+        data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
     }
     else if(notActiveHabits[0]){
-        data = await notActiveHabits[0].getTodayHabitsProcess()
+        data = await notActiveHabits[0].getTodayHabitsProcess(req.user.id)
     }
     else {
         return res.status(200).json({
@@ -250,6 +201,4 @@ exports.getTodayHabits = catchAsync(async(req, res, next) => {
         });
     }
     sendResponse(req, res, data)
-
-
 })

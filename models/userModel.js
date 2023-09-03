@@ -29,13 +29,31 @@ const userSchema = new mongoose.Schema({
         minlength:8,
         select:false
     },
+
     role:{
         type: String,
         enum:['user', 'guest', 'admin'],
         default: 'user'
     },
 
+},
+{
+    toJSON:{virtuals: true},
+    toObject:{virtuals: true}
+    }
+);
+
+userSchema.virtual('Habits',{
+    ref: 'Habit',
+    foreignField: 'user',
+    localField: '_id'
 });
+
+
+userSchema.pre(/^find/, function(next){
+    this.find().select('-__v')
+    next();
+})
 // Middleware Functions(document) For Encrypt Passowrd...
 userSchema.pre('save', async function (next) {
     if(!this.isModified('password')) return next();
@@ -44,6 +62,8 @@ userSchema.pre('save', async function (next) {
 
     next();
 });
+
+
 
 // Instance Method For Curent Document(user)...
 
@@ -60,29 +80,6 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp){
     }
     return false;
 }
-
-// For create randome text snd send it to user to reset token
-// userSchema.methods.createPasswordResetToken = function() {
-//     const randomToken = crypto.randomBytes(32).toString('hex');
-
-//     this.passwordResetToken = crypto.createHash('sha256').update(randomToken).digest('hex');
-//     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
-
-//     const resetToken = {
-//         randomToken,
-//         passwordResetToken:this.passwordResetToken,
-//         passwordResetExpires:this.passwordResetExpires
-//     }
-//     console.log(resetToken,this.passwordResetToken )
-//     return randomToken;
-// };
-
-// For change passwordChangedAt from reset token
-// userSchema.pre('save', function(next){
-//     if(this.isModified('password')|| this.isNew)return next();
-//     this.passwordChangedAt = Date.now()-1000;
-//     next();
-// })
 
 const User = mongoose.model('User',userSchema);
 module.exports = User;

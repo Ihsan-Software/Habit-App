@@ -28,14 +28,26 @@ const habitSchema = new mongoose.Schema({
         require: [true,'missing active of habit...'],
         defult: false
     },
-    date: []
+    date: Array,
+
+    user: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User',
+            require: [true,'missing userID of habit...']
+        }
 });
 
-habitSchema.methods.getTodayHabitsProcess = async function () {
+habitSchema.pre(/^find/, function(next){
+    this.find().select('-__v')
+    next();
+})
+
+
+habitSchema.methods.getTodayHabitsProcess = async function (id) {
     
     console.log('start getTodayHabitsProcess')
-    var activeHabits = await Habit.find({ active: true });
-    var notActiveHabits = await Habit.find({ active: false });
+    var activeHabits = await Habit.find({ active: true, user:id});
+    var notActiveHabits = await Habit.find({ active: false, user:id});
     result=[]
 
     currentTime = new Date().toISOString();
@@ -56,13 +68,12 @@ habitSchema.methods.getTodayHabitsProcess = async function () {
         color: "empty",
         counter: 1,
         active: true,
-        date: [
-            "0000-00-00T22:29:34.390Z"],
-        __v: 1
+        date: ["0000-00-00T22:29:34.390Z"],
+        user: "111"
     }
     if (!activeHabits[0]) 
         activeHabits.push(fakeObj )
-    else if (!notActiveHabits[0]) 
+    if (!notActiveHabits[0]) 
     notActiveHabits.push(fakeObj)
 
     result[0] = notActiveHabits
