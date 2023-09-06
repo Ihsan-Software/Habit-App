@@ -53,18 +53,11 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
 
 
 exports.deleteOne = Model => catchAsync(async (req, res,next) => {
-
-    var habit,doc
-    if (req.params.habitId) {
-        habit = await Model.findByIdAndDelete(req.params.habitId);
-        console.log(habit)
-    }
-    else {
-        doc = await Model.findByIdAndDelete(req.params.id);
-    }
-    if (!doc && !habit) {
-        return next(new AppError('Cant find document From This ID To Delete It...!', 404));
-        
+    
+    const id = req.params.id;
+    const doc = await Model.findByIdAndDelete(id);
+    if(!doc) {
+        return next(new AppError('Cant find document From This ID To Delete It...!',404));
     }   
     res.status(204).json({
         status: "success",
@@ -72,7 +65,6 @@ exports.deleteOne = Model => catchAsync(async (req, res,next) => {
         
     });
 });
-
 exports.updateOne = Model => catchAsync(async (req, res,next) => {
     const id = req.params.id;
     const doc = await Model.findByIdAndUpdate(id,req.body,{

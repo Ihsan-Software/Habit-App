@@ -8,7 +8,7 @@ router.use(authController.protect_)
 
 router.route('/createHabit').post(habitController.createHabit);
 router.route('/getMyHabits/:specialTime').get(habitController.getTodayHabits);
-router.route('/deleteMyHabit/:habitId').get(habitController.deleteHabit, habitController.getTodayHabits);
+router.route('/deleteMyHabit/:habitID').get(habitController.deleteMyHabit);
 router.route('/checkHabit').post(habitController.check);
 router.route('/unCheckHabit').post(habitController.unCheck);
 router.route('/getTodayHabits').get(habitController.getTodayHabits);
