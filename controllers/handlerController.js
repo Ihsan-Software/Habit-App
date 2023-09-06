@@ -38,6 +38,7 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
     const doc = await Model.create(req.body);
     if (id) {
         doc.user = id
+        doc.date = new Date().toISOString();
         doc.save().catch((err) => {
             console.error('Error 🔥: ', err);
         });
