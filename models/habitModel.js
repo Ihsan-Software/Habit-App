@@ -36,30 +36,56 @@ const habitSchema = new mongoose.Schema({
             require: [true,'missing userID of habit...']
         }
 });
-
 habitSchema.pre(/^find/, function(next){
     this.find().select('-__v')
     next();
 })
 
 
-habitSchema.methods.getTodayHabitsProcess = async function (id) {
+habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
     
     console.log('start getTodayHabitsProcess')
     var activeHabits = await Habit.find({ active: true, user:id});
     var notActiveHabits = await Habit.find({ active: false, user:id});
-    result=[]
+    result = []
 
-    currentTime = new Date().toISOString();
+    if (req.params.specialTime) {
+        currentTime = req.params.specialTime
+    }
+    else {
+
+        currentTime = new Date().toISOString();    
+    }
 
     activeHabits.forEach(obj => {
-        if (obj.date[obj.date.length - 1].split('T')[0] === currentTime.split('T')[0] ||obj.date[0].split('T')[0] === currentTime.split('T')[0]) {
-                notActiveHabits = notActiveHabits.filter(e=> e.name!=obj.name)
+        activeHabitsNotToday = false
+        
+        obj.date.forEach(date => {
+            if (date.split('T')[0] === currentTime.split('T')[0]) {
+                activeHabitsNotToday=true
+            }
+        })
+        if (activeHabitsNotToday) {
+            notActiveHabits = notActiveHabits.filter(e=> e.name!=obj.name)
         }
         else {
             activeHabits = activeHabits.filter(e=> e.name!=obj.name)
         }
     })
+
+    if (req.params.specialTime) {
+        notActiveHabits.forEach(obj => {
+            notToday=false
+            obj.date.forEach(date => {
+                if (date.split('T')[0] === currentTime.split('T')[0]) {
+                    notToday=true
+                }
+            })
+            if (!notToday) {
+                notActiveHabits = notActiveHabits.filter(e=> e.name!=obj.name)
+            }
+        })
+    }
 
     var fakeObj = {
         _id: "111111111111111",

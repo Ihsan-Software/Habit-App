@@ -42,12 +42,12 @@ app.use((req, res, next) => {
 
 //security/ 1)limituser response
 
-const limeter  = rateLimit({
-    max:100,
-    windowMs: 60*60*1000,
-    message:' many requests come from this IP,please try in an hour...!'
-});
-app.use('/api', limeter);
+// const limeter  = rateLimit({
+//     max:100,
+//     windowMs: 60*60*1000,
+//     message:' many requests come from this IP,please try in an hour...!'
+// });
+// app.use('/api', limeter);
 
 
 // Routers

@@ -18,52 +18,59 @@ exports.deleteHabit = factory.deleteOne(Habit)
 
 // Other
 
-exports.createMeHabit = (req, res, next) => {
-    if (!req.user) {
-        return next(new AppError('Cant Find UserID...!,maybe you are not pass user  id from token',404));
+const sendResponse = catchAsync(async(req, res, userID)=>{
+
+    var activeHabits = await Habit.find({ active: true});
+    var notActiveHabits = await Habit.find({ active: false });
+    var data;
+    if (activeHabits[0]) {
+        data = await activeHabits[0].getTodayHabitsProcess(req, userID)
     }
+    else if(notActiveHabits[0]){
+        data = await notActiveHabits[0].getTodayHabitsProcess(req, userID)
+    }
+    else {
+        return res.status(200).json({
+            status: 'success',
+            requestTime:req.requestTime,
+            data:[]
+        });
+    }
+
+
+    return res.status(200).json({
+        status: 'success',
+        requestTime:req.requestTime,
+        activeCounter: data[1].length,
+        notActiveCounter:data[0].length,
+        data: {
+            activeHabits: data[1],
+            notActiveHabits:data[0]        
+            }
+    });
+})
+
+exports.createMyHabit = (req, res, next) => {
     req.params.id = req.user.id
     next();
 }
 
-exports.getActiveHabits = catchAsync(async(req, res) => {
-        result = []
-        const habit = await Habit.find();
-        habit.forEach(ele => {
-            ele.date.forEach(e => {
-                if (e.split('T')[0] == req.body.date.split('T')[0]) {
-                    
-                    result.push(ele)
-                    console.log(ele)
-                }
-                
-            })
-        });
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            data:{
-                result
-            }
-        });
+exports.getMyHabits  = (req, res, next) => {
+    req.params.specialTime = req.body.habitDate
+    next();
+};
 
-});
+exports.deleteMyHabit = catchAsync(async (req, res, next) => {
+    
+    const habit = await Habit.find({ _id: req.body.habitID, user: req.user.id });
+    
+    if (!habit[0]) {
+        return next(new AppError('Cant find habit From This ID To Delete It...!',404));
+    }
 
-
-const sendResponse = (req, res, data)=>{
-
-        return res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            activeCounter: data[1].length,
-            notActiveCounter:data[0].length,
-            data: {
-                activeHabits: data[1],
-                notActiveHabits:data[0]
-                
-            }
-        });
-}
+    await Habit.findByIdAndDelete(req.body.habitID);
+    sendResponse(req, res, req.user.id)
+})
 
 exports.check = catchAsync(async(req, res, next) => {
 
@@ -114,10 +121,7 @@ exports.check = catchAsync(async(req, res, next) => {
     }
 
 
-    var activeHabits = await Habit.find({ active: true });
-    var notActiveHabits = await Habit.find({ active: false });
-    const data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
-    sendResponse(req, res, data)
+    sendResponse(req, res, req.user.id)
 });
 
 exports.unCheck = catchAsync(async (req, res, next) => {
@@ -157,24 +161,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
             return next(new AppError('You Dont Have This Habit Completed, Please Complete It Then Click On Uncompleteing', 404));
         }
 
-
-        var activeHabits = await Habit.find({ active: true });
-        var notActiveHabits = await Habit.find({ active: false });
-        var data;
-        if (activeHabits[0]) {
-            data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
-        }
-        else if(notActiveHabits[0]){
-            data = await notActiveHabits[0].getTodayHabitsProcess(req.user.id)
-        }
-        else {
-            return res.status(200).json({
-                status: 'success',
-                requestTime:req.requestTime,
-                data:[]
-            });
-        }
-        sendResponse(req, res, data)
+        sendResponse(req, res, req.user.id)
     
     }
     else {
@@ -183,22 +170,5 @@ exports.unCheck = catchAsync(async (req, res, next) => {
 });
 
 exports.getTodayHabits = catchAsync(async(req, res, next) => {
-
-    var activeHabits = await Habit.find({ active: true });
-    var notActiveHabits = await Habit.find({ active: false });
-    var data;
-    if (activeHabits[0]) {
-        data = await activeHabits[0].getTodayHabitsProcess(req.user.id)
-    }
-    else if(notActiveHabits[0]){
-        data = await notActiveHabits[0].getTodayHabitsProcess(req.user.id)
-    }
-    else {
-        return res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            data:[]
-        });
-    }
-    sendResponse(req, res, data)
+    sendResponse(req, res, req.user.id)
 })
