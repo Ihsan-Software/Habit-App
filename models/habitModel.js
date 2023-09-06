@@ -54,14 +54,14 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
     }
     else {
 
-        currentTime = new Date().toISOString();    
+        currentTime = new Date().toISOString().split('T')[0];    
     }
 
     activeHabits.forEach(obj => {
         activeHabitsNotToday = false
         
         obj.date.forEach(date => {
-            if (date.split('T')[0] === currentTime.split('T')[0]) {
+            if (date.split('T')[0] === currentTime) {
                 activeHabitsNotToday=true
             }
         })
@@ -77,7 +77,7 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
         notActiveHabits.forEach(obj => {
             notToday=false
             obj.date.forEach(date => {
-                if (date.split('T')[0] === currentTime.split('T')[0]) {
+                if (date.split('T')[0] === currentTime) {
                     notToday=true
                 }
             })
