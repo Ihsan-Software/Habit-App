@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(authController.protect_)
 
-router.route('/createHabit').post(habitController.createMyHabit, habitController.createHabit);
-router.route('/getMyHabits').post(habitController.getMyHabits, habitController.getTodayHabits);
-router.route('/deleteMyHabit').post(habitController.deleteMyHabit);
+router.route('/createHabit').post(habitController.createHabit);
+router.route('/getMyHabits/:specialTime').get(habitController.getTodayHabits);
+router.route('/deleteMyHabit/:habitId').get(habitController.deleteHabit, habitController.getTodayHabits);
 router.route('/checkHabit').post(habitController.check);
 router.route('/unCheckHabit').post(habitController.unCheck);
 router.route('/getTodayHabits').get(habitController.getTodayHabits);

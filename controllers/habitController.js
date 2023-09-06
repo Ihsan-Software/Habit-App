@@ -50,28 +50,6 @@ const sendResponse = catchAsync(async(req, res, userID)=>{
     });
 })
 
-exports.createMyHabit = (req, res, next) => {
-    req.params.id = req.user.id
-    next();
-}
-
-exports.getMyHabits  = (req, res, next) => {
-    req.params.specialTime = req.body.habitDate
-    next();
-};
-
-exports.deleteMyHabit = catchAsync(async (req, res, next) => {
-    
-    const habit = await Habit.find({ _id: req.body.habitID, user: req.user.id });
-    
-    if (!habit[0]) {
-        return next(new AppError('Cant find habit From This ID To Delete It...!',404));
-    }
-
-    await Habit.findByIdAndDelete(req.body.habitID);
-    sendResponse(req, res, req.user.id)
-})
-
 exports.check = catchAsync(async(req, res, next) => {
 
     const habit = await Habit.find({ name: req.body.name, user:req.user.id});
@@ -119,8 +97,6 @@ exports.check = catchAsync(async(req, res, next) => {
     else {
         return next(new AppError('You Dont Have This Habit, Please Create It Then Click On Completeing', 404));
     }
-
-
     sendResponse(req, res, req.user.id)
 });
 
