@@ -49,7 +49,7 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
     var notActiveHabits = await Habit.find({ active: false, user:id});
     result = []
 
-    if (req.params.specialTime!=='empty') {
+    if (req.params.specialTime && req.params.specialTime!=='empty') {
         currentTime = req.params.specialTime
     }
     else {
