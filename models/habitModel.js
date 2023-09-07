@@ -8,7 +8,7 @@ const habitSchema = new mongoose.Schema({
     },
 
     icon: {
-        type: String,
+        type: Object,
         require: [true,'missing icon of habit...'],
     },
 

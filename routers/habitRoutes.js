@@ -7,11 +7,11 @@ const router = express.Router();
 router.use(authController.protect_)
 
 router.route('/createHabit').post(habitController.createHabit);
-router.route('/getMyHabits/:specialTime').get(habitController.getTodayHabits);
-router.route('/deleteMyHabit/:habitID').get(habitController.deleteMyHabit);
+// router.route('/getMyHabits/:specialTime').get(habitController.getTodayHabits);
+router.route('/deleteMyHabit/:habitID').delete(habitController.deleteHabit);
 router.route('/checkHabit').post(habitController.check);
 router.route('/unCheckHabit').post(habitController.unCheck);
-router.route('/getTodayHabits').get(habitController.getTodayHabits);
+router.route('/getTodayHabits/:specialTime').get(habitController.getTodayHabits);
 
 router.use(authController.restrictTo('admin'))
 
