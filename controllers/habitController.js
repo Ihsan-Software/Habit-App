@@ -51,7 +51,19 @@ const sendResponse = catchAsync(async(req, res, userID)=>{
 })
 
 
-exports.check = catchAsync(async(req, res, next) => {
+exports.check = catchAsync(async (req, res, next) => {
+    
+    var currentTime
+    
+    if (req.params.checkSpecialTime && req.params.checkSpecialTime!=='empty') {
+        currentTime = req.params.checkSpecialTime
+        req.params.specialTime = currentTime
+    }
+    else {
+        currentTime = req.requestTime;    
+    }
+
+
 
     const habit = await Habit.find({ name: req.body.name, user:req.user.id});
     console.log('start checkProcess')
@@ -62,13 +74,13 @@ exports.check = catchAsync(async(req, res, next) => {
                 if (ele.active) {
                     var findDate = false;
                     ele.date.forEach(eDate => {
-                        if (eDate.split('T')[0] === req.requestTime.split('T')[0])
+                        if (eDate.split('T')[0] === currentTime.split('T')[0])
                             findDate = true
                     })
                     if (!findDate) {
                         
                         ele.counter += 1;
-                        ele.date.push(req.requestTime)
+                        ele.date.push(currentTime)
                         ele.save().catch((err) => {
                             console.error('Error 🔥: ', err);
                         });
@@ -90,7 +102,7 @@ exports.check = catchAsync(async(req, res, next) => {
                 color: habit[0].color,
                 counter: 1,
                 active: true,
-                date: req.requestTime,
+                date: currentTime,
                 user: habit[0].user
             });
         }
@@ -103,25 +115,37 @@ exports.check = catchAsync(async(req, res, next) => {
 
 exports.unCheck = catchAsync(async (req, res, next) => {
 
+
+    var currentTime
+    
+    if (req.params.unCheckHabitSpecialTime && req.params.unCheckHabitSpecialTime!=='empty') {
+        currentTime = req.params.unCheckHabitSpecialTime
+        req.params.specialTime = currentTime
+    }
+    else {
+        currentTime = req.requestTime.split('T')[0];    
+    }
+
+
     const habit = await Habit.find({ name: req.body.name, active: true, user:req.user.id});
     if (habit[0]) {
         console.log('start unCheckProcess')
         console.log(habit)
         var tempHabit = []
-        currentTime = new Date().toISOString();
+
 
         habit[0].date.forEach(ele => {
-            if (ele.split('T')[0] !== currentTime.split('T')[0]) {
+            if (ele.split('T')[0] !== currentTime) {
                 tempHabit.push(ele)
             }
         })
 
-        habit[0].date = habit[0].date.filter(item => item.split('T')[0] === currentTime.split('T')[0])
+        habit[0].date = habit[0].date.filter(item => item.split('T')[0] === currentTime)
 
         if (habit[0].date[0]) {
 
             if (habit[0].counter > 1 && habit[0].date.length==1) {
-                habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== currentTime.split('T')[0])
+                habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== currentTime)
 
                 habit[0].counter -= 1;
                 tempHabit.forEach(ele => {
@@ -145,7 +169,6 @@ exports.unCheck = catchAsync(async (req, res, next) => {
         return next(new AppError('You Dont Have This Habit, Please Create It and Complete It and Then Click On Uncompleteing', 404));
     }
 });
-
 exports.getTodayHabits = catchAsync(async(req, res, next) => {
     sendResponse(req, res, req.user.id)
 })

@@ -7,8 +7,12 @@ const habitSchema = new mongoose.Schema({
         require: [true,'missing name of habit...']
     },
 
+    discription: {
+        type: String,
+        require: [true,'missing discription of habit...'],
+    },
     icon: {
-        type: Object,
+        type: String,
         require: [true,'missing icon of habit...'],
     },
 
