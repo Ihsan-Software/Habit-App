@@ -77,11 +77,11 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
         }
     })
 
-    if (req.params.specialTime!=='empty') {
+    if (req.params.specialTime !== 'empty') {
         notActiveHabits.forEach(obj => {
             notToday=false
             obj.date.forEach(date => {
-                if (date.split('T')[0] === currentTime) {
+                if ((parseInt(date.split('T')[0].split('-')[0])< parseInt(currentTime.split('-')[0])) || (parseInt(date.split('T')[0].split('-')[1])< parseInt(currentTime.split('-')[1])) || (parseInt(date.split('T')[0].split('-')[2])< parseInt(currentTime.split('-')[2]))) {
                     notToday=true
                 }
             })
