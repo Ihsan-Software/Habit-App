@@ -12,6 +12,7 @@ router.post('/login', authController.login);
 //User Routers RESF
 router.use(authController.protect_)
 router.get('/myInformations', userController.getME, userController.getUser)
+router.post('/updateMyPassword', authController.updateMyPassword)
 
 router.use(authController.restrictTo('admin'))
 router.route('/').get(userController.getUsers).post(userController.createUser);

@@ -90,6 +90,22 @@ exports.restrictTo = (...roles)=>{
     }
 }
 
+exports.updateMyPassword = catchAsync(async (req, res, next) => {
+    
+    //1) get user that is logined into
+    const user = await User.findById(req.user.id).select('+password');
+
+    //2) check if current password is correct
+    if(!(await user.correctPassword(req.body.currentPassword,user.password))){
+        return next(new AppError('current password is incorrect..!!',401));
+    }
+
+    //3) update password
+    user.password= req.body.newPassword;
+    await user.save();
+    //4) login user,send WWJ
+    sendToken(user,200, res);
+});
 
 exports.logout = catchAsync(async(req,res,next) => {
     res.cookie('jwt','loggedout', {

@@ -2,25 +2,26 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 
-exports.getAll = Model => catchAsync(async(req, res, next) => {
-    
-        const doc = await Model.find();
-        res.status(200).json({
-            status: 'success',
-            requestTime:req.requestTime,
-            results:doc.length,
-            data:{
-                doc
-            }
-        });
+exports.getAll = Model => catchAsync(async (req, res, next) => {
+    const doc = await Model.find();
+    res.status(200).json({
+        status: 'success',
+        requestTime:req.requestTime,
+        results:doc.length,
+        data:{
+            doc
+        }
+    });
 });
 
 exports.getOne =  (Model, populateOptions) => catchAsync(async (req, res,next)=>{
-    const id = req.params.id ;
+    const id = req.params.id;
+    let doc
     let query = Model.findById(id)
     // if function called by Tour Model
     if (populateOptions)query = query.populate(populateOptions);
-    let doc = await query
+    doc = await query
+
         
     if(!doc) {
         return next(new AppError('Cant find doc From This ID...!',404));
@@ -39,6 +40,9 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
     if (!req.body.email) {
         doc.user = req.user.id
         doc.date = new Date().toISOString();
+        if (req.body.focusDuration) {
+            doc.hour = new Date().toISOString().split('T')[1].split('.')[0];
+        }
         doc.save().catch((err) => {
             console.error('Error 🔥: ', err);
         });
@@ -54,20 +58,27 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
 
 exports.deleteOne = Model => catchAsync(async (req, res,next) => {
     
-    var doc,habit
+    var doc,habit,mood,focus
     if (req.params.habitID) {
         habit = await Model.findByIdAndDelete(req.params.habitID);
+    }
+    else if (req.params.moodID) {
+        mood = await Model.findByIdAndDelete(req.params.moodID);
+    }
+    else if (req.params.focusID) {
+        focus = await Model.findByIdAndDelete(req.params.focusID);
     }
     else {
         doc = await Model.findByIdAndDelete(req.params.id);
     }
-    if(!doc && !habit) {
+    if(!doc && !habit && !mood && !focus) {
         return next(new AppError('Cant find document From This ID To Delete It...!',404));
     }   
     res.status(204).json({
         status: "success"
     });
 });
+
 exports.updateOne = Model => catchAsync(async (req, res,next) => {
     const id = req.params.id;
     const doc = await Model.findByIdAndUpdate(id,req.body,{

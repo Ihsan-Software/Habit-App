@@ -9,6 +9,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 // req from my modules
 const userRouter = require('./routers/userRoutes');
 const habitRouter = require('./routers/habitRoutes');
+const moodRouter = require('./routers/moodRoutes');
+const focusRouter = require('./routers/focusRoutes');
 
 // Import Error Function
 const AppError = require('./utils/appError');
@@ -53,6 +55,8 @@ app.use((req, res, next) => {
 // Routers
 app.use('/api/v1/users',userRouter)
 app.use('/api/v1/habits', habitRouter)
+app.use('/api/v1/moods', moodRouter)
+app.use('/api/v1/focus', focusRouter)
 
 // 1) Error Handling..., When Get Any Router Not Exist In Server...
 app.all('*', (req, res, next) => {
