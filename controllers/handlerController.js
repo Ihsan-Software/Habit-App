@@ -39,7 +39,9 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
     const doc = await Model.create(req.body);
     if (!req.body.email) {
         doc.user = req.user.id
-        doc.date = new Date().toISOString();
+        if (!req.body.date) {
+            doc.date = new Date().toISOString();
+        }
         if (req.body.focusDuration) {
             doc.hour = new Date().toISOString().split('T')[1].split('.')[0];
         }
@@ -54,7 +56,6 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
         }
     });
 });
-
 
 exports.deleteOne = Model => catchAsync(async (req, res,next) => {
     
