@@ -49,6 +49,17 @@ userSchema.virtual('Habits',{
     localField: '_id'
 });
 
+userSchema.virtual('Moods',{
+    ref: 'Mood',
+    foreignField: 'user',
+    localField: '_id'
+});
+
+userSchema.virtual('Focus',{
+    ref: 'Focus',
+    foreignField: 'user',
+    localField: '_id'
+});
 
 userSchema.pre(/^find/, function(next){
     this.find().select('-__v')
