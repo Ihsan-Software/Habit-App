@@ -7,9 +7,9 @@ const focusSchema = new mongoose.Schema({
         require: [true, 'missing name of habit...']
     },
 
-    focusDuration: {
+    duration: {
         type: Number,
-        require: [true, 'missing focusDuration of focus...']
+        require: [true, 'missing focus Duration of focus...']
     },
 
     date: {

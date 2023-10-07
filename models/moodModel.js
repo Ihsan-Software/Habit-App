@@ -12,9 +12,9 @@ const moodSchema = new mongoose.Schema({
         require: [true,'missing title of mood...']
     },
     
-    discription: {
+    description: {
         type: String,
-        require: [true,'missing discription of mood...'],
+        require: [true,'missing description of mood...'],
     },
 
     date: {

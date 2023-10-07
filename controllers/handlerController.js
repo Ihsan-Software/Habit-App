@@ -42,19 +42,28 @@ exports.createOne = Model => catchAsync(async (req, res, next) => {
         if (!req.body.date) {
             doc.date = new Date().toISOString();
         }
-        if (req.body.focusDuration) {
+        if (req.body.duration) {
             doc.hour = new Date().toISOString().split('T')[1].split('.')[0];
         }
         doc.save().catch((err) => {
             console.error('Error 🔥: ', err);
         });
     }
-    res.status(200).json({
-        status: "success",
-        data:{
-            doc
-        }
-    });
+    if (req.body.title) {
+        res.status(200).json({
+            status: "success",
+            requestTime:req.requestTime,
+            Message: "Create New Mood"
+        });
+    }
+    else {
+        res.status(200).json({
+            status: "success",
+            data:{
+                doc
+            }
+        });
+    }
 });
 
 exports.deleteOne = Model => catchAsync(async (req, res,next) => {

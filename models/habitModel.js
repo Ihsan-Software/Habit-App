@@ -7,9 +7,9 @@ const habitSchema = new mongoose.Schema({
         require: [true,'missing name of habit...']
     },
 
-    discription: {
+    description: {
         type: String,
-        require: [true,'missing discription of habit...'],
+        require: [true,'missing description of habit...'],
     },
     icon: {
         type: String,
@@ -24,13 +24,13 @@ const habitSchema = new mongoose.Schema({
     counter: {
         type: Number,
         require: [true,'missing counter of habit...'],
-        defult: 0,
+        default: 0,
     },
 
     active: {
         type: Boolean,
         require: [true,'missing active of habit...'],
-        defult: false
+        default: false
     },
     date: Array,
 
