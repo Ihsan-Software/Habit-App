@@ -17,20 +17,14 @@ exports.getAll = Model => catchAsync(async (req, res, next) => {
 exports.getOne =  (Model, populateOptions) => catchAsync(async (req, res,next)=>{
     const id = req.params.id;
     let doc
-    let query = Model.findById(id)
-    // if function called by Tour Model
-    if (populateOptions)query = query.populate(populateOptions);
-    doc = await query
-
-        
-    if(!doc) {
+    let data = await Model.findById(id)
+    
+    if(!data) {
         return next(new AppError('Cant find doc From This ID...!',404));
     }   
     res.status(200).json({
         status: "success",
-        data:{
-            doc
-        }
+        data
     });
 });
 

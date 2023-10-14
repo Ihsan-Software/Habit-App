@@ -5,7 +5,8 @@ const factory = require('../controllers/handlerController');
 //CURD FUNCTIONS
 exports.getUsers = factory.getAll(User)
 
-exports.getUser = factory.getOne(User,{path: 'Habits Moods Focus'})
+//exports.getUser = factory.getOne(User,{path: 'Habits Moods Focus'})
+exports.getUser = factory.getOne(User)
 
 exports.createUser = factory.createOne(User)
 
