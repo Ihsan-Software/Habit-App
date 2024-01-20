@@ -12,6 +12,7 @@ router.route('/deleteMyHabit/:habitID').delete(habitController.deleteHabit);
 router.route('/checkHabit/:checkSpecialTime').post(habitController.check);
 router.route('/unCheckHabit/:unCheckHabitSpecialTime').post(habitController.unCheck);
 router.route('/getTodayHabits/:specialTime').get(habitController.getTodayHabits);
+router.route("/getDetail").get(habitController.getDetail);
 
 router.use(authController.restrictTo('admin'))
 

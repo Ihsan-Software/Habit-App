@@ -91,21 +91,6 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
         })
     }
 
-    var fakeObj = {
-        _id: "111111111111111",
-        name: "empty",
-        icon: "empty",
-        color: "empty",
-        counter: 1,
-        active: true,
-        date: ["0000-00-00T22:29:34.390Z"],
-        user: "111"
-    }
-    if (!activeHabits[0]) 
-        activeHabits.push(fakeObj )
-    if (!notActiveHabits[0]) 
-    notActiveHabits.push(fakeObj)
-
     result[0] = notActiveHabits
     result[1] = activeHabits
 

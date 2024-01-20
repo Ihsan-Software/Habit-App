@@ -28,36 +28,35 @@ exports.getOne =  (Model, populateOptions) => catchAsync(async (req, res,next)=>
     });
 });
 
-exports.createOne = Model => catchAsync(async (req, res, next) => {
-    
-    const doc = await Model.create(req.body);
-    if (!req.body.email) {
-        doc.user = req.user.id
+exports.createOne = (Model) =>
+    catchAsync(async (req, res, next) => {
+        const doc = await Model.create(req.body);
+        if (!req.body.email) {
+        doc.user = req.user.id;
         if (!req.body.date) {
-            doc.date = new Date().toISOString();
+            doc.date = new Date().toISOString().split("T")[0];
         }
         if (req.body.duration) {
-            doc.hour = new Date().toISOString().split('T')[1].split('.')[0];
+            doc.hour = new Date().toISOString().split("T")[1].split(".")[0];
         }
         doc.save().catch((err) => {
-            console.error('Error 🔥: ', err);
+            console.error("Error 🔥: ", err);
         });
-    }
-    if (req.body.title) {
+        }
+        if (req.body.title) {
         res.status(200).json({
             status: "success",
-            requestTime:req.requestTime,
-            Message: "Create New Mood"
+            requestTime: req.requestTime,
+            Message: "Create New Mood",
         });
-    }
-    else {
+        } else {
         res.status(200).json({
             status: "success",
-            data:{
-                doc
-            }
+            data: {
+            doc,
+            },
         });
-    }
+        }
 });
 
 exports.deleteOne = Model => catchAsync(async (req, res,next) => {
