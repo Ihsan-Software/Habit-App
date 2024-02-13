@@ -56,128 +56,72 @@ const sendResponse = catchAsync(async(req, res, userID)=>{
 exports.check = catchAsync(async (req, res, next) => {
     var currentTime;
 
-    if (req.params.checkSpecialTime && req.params.checkSpecialTime !== "empty") {
-        currentTime = req.params.checkSpecialTime;
-        req.params.specialTime = currentTime;
+    if (req.query.checkSpecialTime && req.query.checkSpecialTime !== undefined) {
+        currentTime = req.query.checkSpecialTime;
     } else {
         currentTime = req.requestTime.split("T")[0];
     }
-
-    const habit = await Habit.find({ name: req.body.name, user: req.user.id });
+    req.query.specialTime = currentTime;
+    const habit = await Habit.findOne({
+        $and: [
+            { _id: req.params.checkHabitID },
+            { date: { $not: { $eq: currentTime } } },
+            { user: req.user.id },
+        ],
+    });
     console.log("start checkProcess");
-    console.log(habit);
-    if (habit[0]) {
-        if (habit.length > 1) {
-        var findDate = false;
-        habit[1].date.forEach((eDate) => {
-            if (eDate.split("T")[0] === currentTime) findDate = true;
-        });
-        if (!findDate) {
-            habit[1].counter += 1;
-            habit[1].date.push(currentTime);
-            habit[1].save().catch((err) => {
+    if (habit) {
+        habit.counter += 1;
+        habit.active = true;
+        habit.date.push(currentTime);
+        habit.save().catch((err) => {
             console.error("Error 🔥: ", err);
-            });
-            console.log("update date, counter:\n");
-            console.log(habit[1]);
-        } else {
-            console.log("cant make check again in this habit.......");
-        }
-        } else {
-        const newHabit = await Habit.create({
-            name: habit[0].name,
-            icon: habit[0].icon,
-            color: habit[0].color,
-            counter: 1,
-            active: true,
-            date: currentTime,
-            user: habit[0].user,
         });
-        }
-    } else {
-        return next(
-        new AppError(
-            "You Dont Have This Habit, Please Create It Then Click On Completeing",
-            404
-        )
-        );
+    }
+    else {
+        return next(new AppError("You Don't Have This Habit, or You Try To Make It Check Again, Please Create It If It Not Already Created Then Click On Completing", 404));
     }
 
     sendResponse(req, res, req.user.id);
-
-  // const result = await habit[0].checkProcess(habit)
-  // console.log(result);
-  //     if ( result[0]) {
-  //             const data = await result[0].getTodayHabitsProcess()
-
-  //             res.status(200).json({
-  //                 status: 'success',
-  //                 requestTime:req.requestTime,
-  //                 activeCounter: data[1].length,
-  //                 notActiveCounter:data[0].length,
-  //                 data: {
-  //                     activeHabits: data[1],
-  //                     notActiveHabits:data[0]
-
-  //                 }
-  //             });
-  // }
 });
 
 exports.unCheck = catchAsync(async (req, res, next) => {
 
-
     var currentTime
-    
-    if (req.params.unCheckHabitSpecialTime && req.params.unCheckHabitSpecialTime!=='empty') {
-        currentTime = req.params.unCheckHabitSpecialTime
-        req.params.specialTime = currentTime
+    if (req.query.unCheckHabitSpecialTime && req.query.unCheckHabitSpecialTime!==undefined) {
+        currentTime = req.query.unCheckHabitSpecialTime
     }
     else {
         currentTime = req.requestTime.split('T')[0];    
     }
+    req.query.specialTime = currentTime
 
+    const habit = await Habit.findOne({
+        $and: [
+            { _id: req.params.uncheckHabitID },
+            { date: currentTime},
+            { user: req.user.id },
+        ],
+    });
 
-    const habit = await Habit.find({ name: req.body.name, active: true, user:req.user.id});
-    if (habit[0]) {
-        console.log('start unCheckProcess')
+    if (habit) {
+        habit.date = habit.date.filter((item) => item !== currentTime);
         console.log(habit)
-        var tempHabit = []
 
-
-        habit[0].date.forEach(ele => {
-            if (ele.split('T')[0] !== currentTime) {
-                tempHabit.push(ele)
-            }
-        })
-
-        habit[0].date = habit[0].date.filter(item => item.split('T')[0] === currentTime)
-
-        if (habit[0].date[0]) {
-
-            if (habit[0].counter > 1 && habit[0].date.length==1) {
-                habit[0].date = habit[0].date.filter(item => item.split('T')[0] !== currentTime)
-
-                habit[0].counter -= 1;
-                tempHabit.forEach(ele => {
-                    habit[0].date.push(ele)
-                })
-                habit[0].save().catch((err) => {
-                    console.error('Error 🔥: ', err);
-                });
-            }
-            else 
-                await Habit.findByIdAndDelete(habit[0]._id);
+        if (habit.date.length > 0) {
+            habit.counter -= 1;
+            habit.save().catch((err) => {
+            console.error("Error 🔥: ", err);
+            });
         }
         else {
-            return next(new AppError('You Dont Have This Habit Completed, Please Complete It Then Click On Uncompleteing', 404));
+            await Habit.findByIdAndDelete(habit._id);
         }
-
         sendResponse(req, res, req.user.id)
     
     }
     else {
-        return next(new AppError('You Dont Have This Habit, Please Create It and Complete It and Then Click On Uncompleteing', 404));
+        return next(new AppError("You Don't Have This Habit, Or This Habit Is Not Completed, Please Check It Is Already Created  and Completed Then Click On un-completing", 404));
     }
 });
 

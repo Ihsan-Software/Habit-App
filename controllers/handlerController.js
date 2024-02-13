@@ -33,9 +33,6 @@ exports.createOne = (Model) =>
         const doc = await Model.create(req.body);
         if (!req.body.email) {
         doc.user = req.user.id;
-        if (!req.body.date) {
-            doc.date = new Date().toISOString().split("T")[0];
-        }
         if (req.body.duration) {
             doc.hour = new Date().toISOString().split("T")[1].split(".")[0];
         }
