@@ -62,26 +62,24 @@ exports.check = catchAsync(async (req, res, next) => {
         currentTime = req.requestTime.split("T")[0];
     }
     req.query.specialTime = currentTime;
-    const habit = await Habit.findOne({
+    const habit = await Habit.updateOne({
         $and: [
             { _id: req.params.checkHabitID },
             { date: { $not: { $eq: currentTime } } },
             { user: req.user.id },
-        ],
-    });
-    console.log("start checkProcess");
-    if (habit) {
-        habit.counter += 1;
-        habit.active = true;
-        habit.date.push(currentTime);
-        habit.save().catch((err) => {
-            console.error("Error 🔥: ", err);
-        });
-    }
-    else {
+            ],
+        },
+        {
+            $push: { date: currentTime }, 
+            $set: { active: true },
+            $inc: { counter: 1 },
+        }
+    );
+
+    if (habit.modifiedCount === 0) {
         return next(new AppError("You Don't Have This Habit, or You Try To Make It Check Again, Please Create It If It Not Already Created Then Click On Completing", 404));
     }
-
+    
     sendResponse(req, res, req.user.id);
 });
 
@@ -96,33 +94,35 @@ exports.unCheck = catchAsync(async (req, res, next) => {
     }
     req.query.specialTime = currentTime
 
-    const habit = await Habit.findOne({
+    const habit = await Habit.updateOne({
         $and: [
             { _id: req.params.uncheckHabitID },
             { date: currentTime},
             { user: req.user.id },
         ],
-    });
-
-    if (habit) {
-        habit.date = habit.date.filter((item) => item !== currentTime);
-        console.log(habit)
-
-        if (habit.date.length > 0) {
-            habit.counter -= 1;
-            habit.save().catch((err) => {
-            console.error("Error 🔥: ", err);
-            });
+        },
+        {
+            $inc: { counter: -1 },
+            $pull: { date: currentTime },
         }
-        else {
-            await Habit.findByIdAndDelete(habit._id);
-        }
-        sendResponse(req, res, req.user.id)
-    
-    }
-    else {
+    );
+
+    if (habit.modifiedCount === 0) {
         return next(new AppError("You Don't Have This Habit, Or This Habit Is Not Completed, Please Check It Is Already Created  and Completed Then Click On un-completing", 404));
     }
+
+    await Habit.updateOne({
+            $and: [
+                { _id: req.params.uncheckHabitID },
+                { date: { $eq: [] }},
+                { user: req.user.id },
+            ]
+        },
+        {
+            $set: { active: false }
+        }
+        );
+    sendResponse(req, res, req.user.id);
 });
 
 exports.getTodayHabits = catchAsync(async(req, res, next) => {
