@@ -9,16 +9,12 @@ const habitSchema = new mongoose.Schema({
 
     description: {
         type: String,
-        require: [true,'missing description of habit...'],
+        require: [true, 'missing description of habit...'],
+        default: ' ',
     },
     icon: {
         type: String,
         require: [true,'missing icon of habit...'],
-    },
-
-    color: {
-        type: String,
-        require: [true,'missing color of habit...'],
     },
 
     counter: {
@@ -33,6 +29,13 @@ const habitSchema = new mongoose.Schema({
         default: false
     },
     date: Array,
+    appearDays: Array,
+    createdAt: 
+        {
+        type: Date,
+        require: [true,'missing createdAt of habit...'],
+        default: new Date().toISOString()
+    },
 
     user: {
             type: mongoose.Schema.ObjectId,
@@ -49,47 +52,34 @@ habitSchema.pre(/^find/, function(next){
 habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
     
     console.log('start getTodayHabitsProcess')
-    var activeHabits = await Habit.find({ active: true, user:id});
-    var notActiveHabits = await Habit.find({ active: false, user:id});
     result = []
-
-    if (req.params.specialTime && req.params.specialTime!=='empty') {
-        currentTime = req.params.specialTime
+    var currentTime, currentDay;
+    if (req.query.specialTime && req.query.specialTime!==undefined) {
+        currentTime = req.query.specialTime
+        currentDay = req.query.specialDay;
     }
     else {
-
         currentTime = new Date().toISOString().split('T')[0];    
+        var daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        var date = new Date();
+        var dayIndex = date.getDay();
+        var todayName = daysOfWeek[dayIndex];
+        console.log(todayName);
+        currentDay = todayName;
     }
+    console.log(currentTime);
+    console.log(currentDay);
+    var activeHabits = await Habit.find({ $and: [{ date:currentTime}, { user: id }]});
+    var notActiveHabits = await Habit.find({ $and: [{ date:{$not:{$eq:currentTime}}}, { appearDays: currentDay }, { user: id }]});
 
-    activeHabits.forEach(obj => {
-        activeHabitsNotToday = false
-        
-        obj.date.forEach(date => {
-            if (date.split('T')[0] === currentTime) {
-                activeHabitsNotToday=true
-            }
-        })
-        if (activeHabitsNotToday) {
-            notActiveHabits = notActiveHabits.filter(e=> e.name!=obj.name)
-        }
-        else {
-            activeHabits = activeHabits.filter(e=> e.name!=obj.name)
-        }
-    })
-
-    if (req.params.specialTime !== 'empty') {
-        notActiveHabits.forEach(obj => {
-            notToday=false
-            obj.date.forEach(date => {
-                if ((parseInt(date.split('T')[0].split('-')[0])< parseInt(currentTime.split('-')[0])) || (parseInt(date.split('T')[0].split('-')[1])< parseInt(currentTime.split('-')[1])) || (parseInt(date.split('T')[0].split('-')[2])< parseInt(currentTime.split('-')[2]))) {
-                    notToday=true
-                }
-            })
-            if (!notToday) {
-                notActiveHabits = notActiveHabits.filter(e=> e.name!=obj.name)
-            }
-        })
-    }
 
     result[0] = notActiveHabits
     result[1] = activeHabits
