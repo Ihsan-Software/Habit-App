@@ -29,7 +29,7 @@ const habitSchema = new mongoose.Schema({
         default: false
     },
     date: Array,
-
+    appearDays: Array,
     createdAt: 
         {
         type: Date,
@@ -53,16 +53,32 @@ habitSchema.methods.getTodayHabitsProcess = async function (req, id) {
     
     console.log('start getTodayHabitsProcess')
     result = []
-    
+    var currentTime, currentDay;
     if (req.query.specialTime && req.query.specialTime!==undefined) {
         currentTime = req.query.specialTime
+        currentDay = req.query.specialDay;
     }
     else {
         currentTime = new Date().toISOString().split('T')[0];    
+        var daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        var date = new Date();
+        var dayIndex = date.getDay();
+        var todayName = daysOfWeek[dayIndex];
+        console.log(todayName);
+        currentDay = todayName;
     }
-    console.log(currentTime)
+    console.log(currentTime);
+    console.log(currentDay);
     var activeHabits = await Habit.find({ $and: [{ date:currentTime}, { user: id }]});
-    var notActiveHabits = await Habit.find({ $and: [{ date:{$not:{$eq:currentTime}}}, { user: id }]});
+    var notActiveHabits = await Habit.find({ $and: [{ date:{$not:{$eq:currentTime}}}, { appearDays: currentDay }, { user: id }]});
 
 
     result[0] = notActiveHabits

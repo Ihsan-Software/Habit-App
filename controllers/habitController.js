@@ -54,14 +54,30 @@ const sendResponse = catchAsync(async(req, res, userID)=>{
 
 
 exports.check = catchAsync(async (req, res, next) => {
-    var currentTime;
+    var currentTime, currentDay;
 
-    if (req.query.checkSpecialTime && req.query.checkSpecialTime !== undefined) {
-        currentTime = req.query.checkSpecialTime;
+    if (req.query.specialTime && req.query.specialTime !== undefined) {
+        currentTime = req.query.specialTime;
+        currentDay = req.query.specialDay;
     } else {
         currentTime = req.requestTime.split("T")[0];
+        var daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        var date = new Date();
+        var dayIndex = date.getDay();
+        var todayName = daysOfWeek[dayIndex];
+        console.log(todayName);
+        currentDay = todayName;
     }
     req.query.specialTime = currentTime;
+    req.query.specialDay = currentDay;
     const habit = await Habit.updateOne({
         $and: [
             { _id: req.params.checkHabitID },
@@ -85,15 +101,30 @@ exports.check = catchAsync(async (req, res, next) => {
 
 exports.unCheck = catchAsync(async (req, res, next) => {
 
-    var currentTime
-    if (req.query.unCheckHabitSpecialTime && req.query.unCheckHabitSpecialTime!==undefined) {
-        currentTime = req.query.unCheckHabitSpecialTime
+    var currentTime, currentDay;
+    if (req.query.specialTime && req.query.specialTime!==undefined) {
+        currentTime = req.query.specialTime
+        currentDay = req.query.specialDay;
     }
     else {
         currentTime = req.requestTime.split('T')[0];    
+        var daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        var date = new Date();
+        var dayIndex = date.getDay();
+        var todayName = daysOfWeek[dayIndex];
+        console.log(todayName);
+        currentDay = todayName;
     }
-    req.query.specialTime = currentTime
-
+    req.query.specialTime = currentTime;
+    req.query.specialDay = currentDay;
     const habit = await Habit.updateOne({
         $and: [
             { _id: req.params.uncheckHabitID },
@@ -125,7 +156,7 @@ exports.unCheck = catchAsync(async (req, res, next) => {
     sendResponse(req, res, req.user.id);
 });
 
-exports.getTodayHabits = catchAsync(async(req, res, next) => {
+exports.getTodayHabits = catchAsync(async (req, res, next) => {
     sendResponse(req, res, req.user.id)
 })
 
