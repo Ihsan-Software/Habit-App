@@ -41,6 +41,8 @@ exports.createOne = (Model) =>
         });
         }
         if (req.body.title) {
+            if (!req.body.date)
+                doc.date = new Date().toISOString().split("T")[0]
         res.status(200).json({
             status: "success",
             requestTime: req.requestTime,

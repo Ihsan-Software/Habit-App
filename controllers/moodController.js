@@ -1,7 +1,8 @@
 const Mood = require('../models/moodModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerController');
-
+const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId; 
 //CURD FUNCTIONS
 exports.getMoods = factory.getAll(Mood)
 
@@ -26,35 +27,39 @@ exports.getMyMoods = catchAsync(async (req, res, next) => {
     });
 });
 
+
 exports.getWeeklyMoods = catchAsync(async (req, res, next) => {
+    const year = req.params.moodDate.split('-')[0]
+    const month = req.params.moodDate.split('-')[1] 
+    const day = req.params.moodDate.split('-')[2] * 1 + 6
+    let end = ''
+    if (day <= 9){
+        end= `0${day}`
+    }
+    else{
+        end= `${day}`
+    }
     
-    let mood = await Mood.find({ user: req.user.id });
-    const userDate = req.params.moodDate.split('-')
-    limitDate = parseInt(userDate[2]) + 7
-    console.log(userDate)
-
-    console.log(limitDate)
-    mood.forEach(ele => {
-
-        findElement = false
-        moodDate = ele.date.split('T')[0].split('-')
-        console.log(moodDate)
-        if ((moodDate[0] === userDate[0] && moodDate[1] === userDate[1]) &&(parseInt(moodDate[2]) >= parseInt(userDate[2]) && moodDate[2]< limitDate)) {
-            findElement = true
+    console.log(end)
+    const mood = await Mood.aggregate([
+        {
+            $match: {
+                
+                $and: [{user: new ObjectId(`${req.user.id}`)},{date: { $gte: req.params.moodDate }}, {date: { $lte: `${year}-${month}-${end}` }}]
+            }
+        },
+        {
+            $project:{
+                __v:0
+                }
         }
-        if (!findElement) {
-            console.log('ggg')
-            mood = mood.filter(e =>e._id !=ele._id)
-        }
-    })
+    ])
 
     res.status(200).json({
         status: 'success',
         requestTime: req.requestTime,
         moodsCounter:mood.length,
-        data: {
-            mood
-        }
+        mood
+        
     });
 });
-
